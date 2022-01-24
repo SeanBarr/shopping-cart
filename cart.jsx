@@ -1,19 +1,4 @@
 // sumulate getting products from DataBase
-const products = [
-  { name: "Apples_:", country: "Italy", cost: 3, instock: 10 },
-  { name: "Oranges:", country: "Spain", cost: 4, instock: 3 },
-  { name: "Beans__:", country: "USA", cost: 2, instock: 5 },
-  { name: "Cabbage:", country: "USA", cost: 1, instock: 8 },
-];
-//=========Cart=============
-const Cart = (props) => {
-  const { Card, Accordion, Button } = ReactBootstrap;
-  let data = props.location.data ? props.location.data : products;
-  console.log(`data:${JSON.stringify(data)}`);
-
-  return <Accordion defaultActiveKey="0">{list}</Accordion>;
-};
-
 const useDataApi = (initialUrl, initialData) => {
   const { useState, useEffect, useReducer } = React;
   const [url, setUrl] = useState(initialUrl);
@@ -75,7 +60,7 @@ const dataFetchReducer = (state, action) => {
 };
 
 const Products = (props) => {
-  const [items, setItems] = React.useState(products);
+  const [items, setItems] = React.useState([]);
   const [cart, setCart] = React.useState([]);
   const [total, setTotal] = React.useState(0);
   const {
@@ -86,18 +71,28 @@ const Products = (props) => {
     Row,
     Col,
     Image,
-    Input,
+    ListGroup,
+    Badge,
   } = ReactBootstrap;
   //  Fetch Data
   const { Fragment, useState, useEffect, useReducer } = React;
-  const [query, setQuery] = useState("http://localhost:1337/products");
   const [{ data, isLoading, isError }, doFetch] = useDataApi(
-    "http://localhost:1337/products",
+    "http://localhost:1337/api/products",
     {
       data: [],
     }
   );
   console.log(`Rendering Products ${JSON.stringify(data)}`);
+
+  useEffect(() => {
+    console.log("we can console this",data,data.data)
+    const dbProduct = [];
+    data.data.map(product => {
+      dbProduct.push(product.attributes)
+    })
+    setItems(dbProduct)
+  }, [isLoading]);
+  
   // Fetch Data
   const addToCart = (e) => {
     let name = e.target.name;
@@ -119,38 +114,38 @@ const Products = (props) => {
     setCart(newCart);
     setItems(newItems);
   };
-  const photos = ["apple.png", "orange.png", "beans.png", "cabbage.png"];
+
 
   let list = items.map((item, index) => {
-    let n = index + 1049;
-    let uhit = "https://picsum.photos/" + n;
     return (
-      <li key={index}>
-        <Image src={uhit} width={70} roundedCircle></Image>
-        <Button variant="primary" size="large">
-          {item.name}:${item.cost}-Stock={item.instock}
-        </Button>
-        <input name={item.name} type="submit" onClick={addToCart}></input>
-      </li>
+      <ListGroup.Item key={index}
+      as="li"
+      className="d-flex justify-content-between align-items-start"
+      >
+      <Image src={item.imagesURL} width={70} height={70} roundedCircle></Image>
+      <div className="ms-2 me-auto">
+        <div className="fw-bold">{item.name}</div>
+        Stock:{item.instock}
+      </div>
+      <Button variant="success" name={item.name} type="button" onClick={addToCart}>Add to Cart</Button>
+      <Badge bg="warning" pill>
+      ${item.cost}
+      </Badge>
+    </ListGroup.Item>
     );
   });
   let cartList = cart.map((item, index) => {
     return (
       <Card key={index}>
         <Card.Header>
-          <Accordion.Toggle as={Button} variant="link" eventKey={1 + index}>
-            {item.name}
-          </Accordion.Toggle>
+          <Button onClick={() => deleteCartItem(index)}>
+          {item.name}
+          </Button>
         </Card.Header>
-        <Accordion.Collapse
-          onClick={() => deleteCartItem(index)}
-          eventKey={1 + index}
-        >
-          <Card.Body>
+        <Card.Body>
             $ {item.cost} from {item.country}
-          </Card.Body>
-        </Accordion.Collapse>
-      </Card>
+        </Card.Body>
+       </Card>
     );
   });
 
@@ -174,47 +169,38 @@ const Products = (props) => {
     //cart.map((item, index) => deleteCartItem(index));
     return newTotal;
   };
-  const restockProducts = (url) => {
-    doFetch(url);
+  const restockProducts = () => {
+    doFetch('http://localhost:1337/api/products');
     let newItems = data.map((item) => {
-      let { name, country, cost, instock } = item;
-      return { name, country, cost, instock };
+      let { name, country, cost, instock, imagesURL } = item;
+      return { name, country, cost, instock, imagesURL };
     });
     setItems([...items, ...newItems]);
   };
 
   return (
     <Container>
-      <Row>
+      <Row className="d-flex flex-column text-center p-4">
+          <h1 className="mb-3">React Shopping Cart</h1>
+          <h2>Welcome To Our Store</h2>
+      </Row>
+      <Row className="mt-4">
         <Col>
-          <h1>Product List</h1>
-          <ul style={{ listStyleType: "none" }}>{list}</ul>
+          <h3>Product List</h3>
+          <ListGroup as="ul">{list}</ListGroup>
+          <Button className="mt-3" variant="primary" onClick={restockProducts}
+          type="button">ReStock Products
+        </Button>
         </Col>
         <Col>
-          <h1>Cart Contents</h1>
+          <h3>Cart Contents</h3>
           <Accordion>{cartList}</Accordion>
         </Col>
         <Col>
-          <h1>CheckOut </h1>
-          <Button onClick={checkOut}>CheckOut $ {finalList().total}</Button>
+          <h3>CheckOut </h3>
+          <Button className="mt-3" onClick={checkOut}>CheckOut $ {finalList().total}</Button>
           <div> {finalList().total > 0 && finalList().final} </div>
         </Col>
-      </Row>
-      <Row>
-        <form
-          onSubmit={(event) => {
-            restockProducts(`http://localhost:1337/${query}`);
-            console.log(`Restock called on ${query}`);
-            event.preventDefault();
-          }}
-        >
-          <input
-            type="text"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-          />
-          <button type="submit">ReStock Products</button>
-        </form>
       </Row>
     </Container>
   );
