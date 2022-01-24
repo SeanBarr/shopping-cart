@@ -182,7 +182,7 @@ const Products = (props) => {
     <Container>
       <Row className="d-flex flex-column text-center p-4">
           <h1 className="mb-3">React Shopping Cart</h1>
-          <h2>Welcome To Our Store</h2>
+          <h2>Welcome To The Store</h2>
       </Row>
       <Row className="mt-4">
         <Col>
