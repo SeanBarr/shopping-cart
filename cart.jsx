@@ -76,6 +76,7 @@ const Products = (props) => {
   } = ReactBootstrap;
   //  Fetch Data
   const { Fragment, useState, useEffect, useReducer } = React;
+  const [query, setQuery] = useState("http://localhost:1337/products");
   const [{ data, isLoading, isError }, doFetch] = useDataApi(
     "http://localhost:1337/api/products",
     {
@@ -85,7 +86,6 @@ const Products = (props) => {
   console.log(`Rendering Products ${JSON.stringify(data)}`);
 
   useEffect(() => {
-    console.log("we can console this",data,data.data)
     const dbProduct = [];
     data.data.map(product => {
       dbProduct.push(product.attributes)
@@ -169,8 +169,8 @@ const Products = (props) => {
     //cart.map((item, index) => deleteCartItem(index));
     return newTotal;
   };
-  const restockProducts = () => {
-    doFetch('http://localhost:1337/api/products');
+  const restockProducts = (url) => {
+    doFetch(url);
     let newItems = data.map((item) => {
       let { name, country, cost, instock, imagesURL } = item;
       return { name, country, cost, instock, imagesURL };
@@ -188,9 +188,20 @@ const Products = (props) => {
         <Col>
           <h3>Product List</h3>
           <ListGroup as="ul">{list}</ListGroup>
-          <Button className="mt-3" variant="primary" onClick={restockProducts}
-          type="button">ReStock Products
-        </Button>
+          <form
+          onSubmit={(event) => {
+            restockProducts(`http://localhost:1337/${query}`);
+            console.log(`Restock called on ${query}`);
+            event.preventDefault();
+          }}
+        >
+          <input
+            type="text"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+          <Button className="mt-3" variant="primary" type="submit">ReStock Products</Button>
+        </form>
         </Col>
         <Col>
           <h3>Cart Contents</h3>
